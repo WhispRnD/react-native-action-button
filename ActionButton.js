@@ -6,7 +6,10 @@ import {
   View,
   Animated,
   TouchableOpacity,
+  Platform
 } from "react-native";
+import { LinearGradient } from 'expo';
+
 import ActionButtonItem from "./ActionButtonItem";
 import {
   shadowStyle,
@@ -176,7 +179,6 @@ export default class ActionButton extends Component {
       justifyContent: "center"
     };
 
-    const Touchable = getTouchableComponent(this.props.useNativeFeedback);
     const parentStyle = isAndroid &&
       this.props.fixNativeFeedbackRadius
       ? {
@@ -186,15 +188,19 @@ export default class ActionButton extends Component {
           width: this.props.size
         }
       : { marginHorizontal: this.props.offsetX, zIndex: this.props.zIndex };
-
+    const name = {
+        color: '#FFF',
+        fontWeight: '800',
+        fontSize: 18
+    }
     return (
       <View style={[
-        parentStyle,
-        !this.props.hideShadow && shadowStyle,
-        !this.props.hideShadow && this.props.shadowStyle
+          {alignSelf: 'flex-start', flex: 0, left: 0, bottom: 0},
+          !this.props.hideShadow && !isAndroid && shadowStyle,
+          !this.props.hideShadow && !isAndroid && this.props.shadowStyle
       ]}
       >
-        <Touchable
+        <TouchableOpacity
           testID={this.props.testID}
           background={touchableBackground(
             this.props.nativeFeedbackRippleColor,
@@ -209,14 +215,28 @@ export default class ActionButton extends Component {
           onPressIn={this.props.onPressIn}
           onPressOut={this.props.onPressOut}
         >
-          <Animated.View
-            style={wrapperStyle}
-          >
-            <Animated.View style={[buttonStyle, animatedViewStyle]}>
-              {this._renderButtonIcon()}
-            </Animated.View>
-          </Animated.View>
-        </Touchable>
+            <LinearGradient
+                colors={['#ED2324', '#7C4A6D', '#0074BC']}
+                start={[-0.4, -0.25]}
+                end={[1.4, 0.25]}
+                location={[0.25, 0.45, 1]}
+                style={{
+                    flexDirection: 'column',
+
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 40,
+                    width: 80,
+                    height: 80,
+
+
+                }}
+                >
+
+                  <Text style={[name]}>{'תדלוק/'}</Text>
+                  <Text style={[name]}>{'תשלום'}</Text>
+            </LinearGradient>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -394,7 +414,6 @@ ActionButton.defaultProps = {
   backdrop: false,
   degrees: 45,
   position: "right",
-  offsetX: 30,
   offsetY: 30,
   size: 56,
   verticalOrientation: "up",

@@ -5,16 +5,19 @@ import {
 } from "react-native";
 
 export const DEFAULT_ACTIVE_OPACITY = 0.85;
+/* Oval 5: */
+// background-image: linear-gradient(-141deg, #ED2324 0%, #0074BC 100%);
+// box-shadow: 0 2px 4px 0 rgba(0,0,0,0.50);
 
 export const shadowStyle = {
-  shadowOpacity: 0.35,
+  shadowOpacity: 0.5,
   shadowOffset: {
     width: 0,
-    height: 5
+    height: 1
   },
   shadowColor: "#000",
-  shadowRadius: 3,
-  elevation: 5
+  shadowRadius: 2,
+  elevation: 3
 };
 
 export const alignItemsMap = {

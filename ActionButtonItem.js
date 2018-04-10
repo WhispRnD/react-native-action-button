@@ -8,6 +8,7 @@ import {
   TouchableNativeFeedback,
   TouchableWithoutFeedback,
   Dimensions,
+  TouchableOpacity
 } from "react-native";
 import {
   shadowStyle,
@@ -56,11 +57,9 @@ export default class ActionButtonItem extends Component {
       hideShadow,
       spacing
     } = this.props;
-
     if (!this.props.active) return null;
-
     const animatedViewStyle = {
-      marginBottom: -SHADOW_SPACE,
+      marginBottom: -10,
       alignItems: alignItemsMap[position],
 
       // backgroundColor: this.props.buttonColor,
@@ -68,7 +67,7 @@ export default class ActionButtonItem extends Component {
       transform: [
         {
           translateY: this.props.anim.interpolate({
-            inputRange: [0, 1],
+            inputRange: [0, 0],
             outputRange: [verticalOrientation === "down" ? -40 : 40, 0]
           })
         }
@@ -94,20 +93,18 @@ export default class ActionButtonItem extends Component {
       ? {
           height: size,
           marginBottom: spacing,
-          right: this.props.offsetX,
+
           borderRadius: this.props.size / 2
         }
       : {
-          paddingHorizontal: this.props.offsetX,
           height: size + SHADOW_SPACE + spacing
         };
     return (
       <Animated.View
         pointerEvents="box-none"
-        style={[animatedViewStyle, parentStyle]}
+        style={[{alignSelf: 'flex-start', flex: 0, left: 9, right: 0},animatedViewStyle, parentStyle]}
       >
-        <View>
-          <Touchable
+          <TouchableOpacity
             testID={this.props.testID}
             background={touchableBackground(
               this.props.nativeFeedbackRippleColor,
@@ -118,12 +115,12 @@ export default class ActionButtonItem extends Component {
           >
             <View style={[
               buttonStyle,
-              !hideShadow ? {...shadowStyle, ...this.props.shadowStyle} : null
+              !hideShadow ? {...shadowStyle, ...this.props.shadowStyle} : null,
+                {right: 0}
             ]}>
               {this.props.children}
             </View>
-          </Touchable>
-        </View>
+          </TouchableOpacity>
         {this._renderTitle()}
       </Animated.View>
     );
