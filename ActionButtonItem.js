@@ -1,447 +1,222 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import {
-  StyleSheet,
-  Text,
-  View,
-  Animated,
-  TouchableOpacity,
-  Platform,
-    Image
+    StyleSheet,
+    Text,
+    View,
+    Animated,
+    TouchableNativeFeedback,
+    TouchableWithoutFeedback,
+    Dimensions,
+    TouchableOpacity
 } from "react-native";
+import {
+    shadowStyle,
+    alignItemsMap,
+    getTouchableComponent,
+    isAndroid,
+    touchableBackground,
+    DEFAULT_ACTIVE_OPACITY
+} from "./shared";
 import { LinearGradient } from 'expo';
 
-import ActionButtonItem from "./ActionButtonItem";
-import {
-  shadowStyle,
-  alignItemsMap,
-  getTouchableComponent,
-  isAndroid,
-  touchableBackground,
-  DEFAULT_ACTIVE_OPACITY
-} from "./shared";
+const { width: WIDTH } = Dimensions.get("window");
+const SHADOW_SPACE = 10;
+const TEXT_HEIGHT = 22;
 
-const closeWhite = require('../../assets/images/closeWhite.png')
+const TextTouchable = isAndroid
+    ? TouchableNativeFeedback
+    : TouchableWithoutFeedback;
 
-export default class ActionButton extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      resetToken: props.resetToken,
-      active: props.active
-    };
-
-    this.anim = new Animated.Value(props.active ? 1 : 0);
-    this.timeout = null;
-  }
-
-  componentWillUnmount() {
-    clearTimeout(this.timeout);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.resetToken !== this.state.resetToken) {
-      if (nextProps.active === false && this.state.active === true) {
-        if (this.props.onReset) this.props.onReset();
-        Animated.spring(this.anim, { toValue: 0 }).start();
-        setTimeout(
-          () =>
-            this.setState({ active: false, resetToken: nextProps.resetToken }),
-          250
-        );
-        return;
-      }
-
-      if (nextProps.active === true && this.state.active === false) {
-        Animated.spring(this.anim, { toValue: 1 }).start();
-        this.setState({ active: true, resetToken: nextProps.resetToken });
-        return;
-      }
-
-      this.setState({
-        resetToken: nextProps.resetToken,
-        active: nextProps.active
-      });
+export default class ActionButtonItem extends Component {
+    static get defaultProps() {
+        return {
+            active: true,
+            spaceBetween: 15,
+            useNativeFeedback: true,
+            activeOpacity: DEFAULT_ACTIVE_OPACITY,
+            fixNativeFeedbackRadius: false,
+            nativeFeedbackRippleColor: "rgba(255,255,255,0.75)"
+        };
     }
-  }
 
-  //////////////////////
-  // STYLESHEET GETTERS
-  //////////////////////
-
-  getOrientation() {
-    return { alignItems: alignItemsMap[this.props.position] };
-  }
-
-  getOffsetXY() {
-    return {
-      // paddingHorizontal: this.props.offsetX,
-      paddingVertical: this.props.offsetY
-    };
-  }
-
-  getOverlayStyles() {
-    return [
-      styles.overlay,
-      {
-        elevation: this.props.elevation,
-        zIndex: this.props.zIndex,
-        justifyContent: this.props.verticalOrientation === "up"
-          ? "flex-end"
-          : "flex-start"
-      }
-    ];
-  }
-
-  //////////////////////
-  // RENDER METHODS
-  //////////////////////
-
-  render() {
-    return (
-      <View
-        pointerEvents="box-none"
-        style={[this.getOverlayStyles(), this.props.style]}
-      >
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            this.getOverlayStyles(),
-            {
-              backgroundColor: this.props.bgColor,
-              opacity: this.anim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, this.props.bgOpacity]
-              })
-            }
-          ]}
-        >
-          {this.props.backdrop}
-        </Animated.View>
-        <View
-          pointerEvents="box-none"
-          style={[
-            this.getOverlayStyles(),
-            this.getOrientation(),
-            this.getOffsetXY()
-          ]}
-        >
-          {this.state.active &&
-            !this.props.backgroundTappable &&
-            this._renderTappableBackground()}
-
-          {this.props.verticalOrientation === "up" &&
-            this.props.children &&
-            this._renderActions()}
-          {this._renderMainButton()}
-          {this.props.verticalOrientation === "down" &&
-            this.props.children &&
-            this._renderActions()}
-        </View>
-      </View>
-    );
-  }
-
-  _renderMainButton() {
-    const animatedViewStyle = {
-      transform: [
-        {
-          scale: this.anim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [1, this.props.outRangeScale]
-          })
-        },
-        {
-          rotate: this.anim.interpolate({
-            inputRange: [0, 1],
-            outputRange: ["0deg", this.props.degrees + "deg"]
-          })
-        }
-      ]
-    };
-
-    const wrapperStyle = {
-      backgroundColor: this.anim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [
-          this.props.buttonColor,
-          this.props.btnOutRange || this.props.buttonColor
-        ]
-      }),
-      width: this.props.size,
-      height: this.props.size,
-      borderRadius: this.props.size / 2
-    };
-
-    const buttonStyle = {
-      width: this.props.size,
-      height: this.props.size,
-      borderRadius: this.props.size / 2,
-      alignItems: "center",
-      justifyContent: "center"
-    };
-
-    const parentStyle = isAndroid &&
-      this.props.fixNativeFeedbackRadius
-      ? {
-          right: this.props.offsetX,
-          zIndex: this.props.zIndex,
-          borderRadius: this.props.size / 2,
-          width: this.props.size
-        }
-      : { marginHorizontal: this.props.offsetX, zIndex: this.props.zIndex };
-    const name = {
-        color: '#FFF',
-        fontWeight: '800',
-        fontSize: 18
+    static get propTypes() {
+        return {
+            active: PropTypes.bool,
+            useNativeFeedback: PropTypes.bool,
+            fixNativeFeedbackRadius: PropTypes.bool,
+            nativeFeedbackRippleColor: PropTypes.string,
+            activeOpacity: PropTypes.number
+        };
     }
-    return (
-      <View style={[
-          {alignSelf: 'flex-start', flex: 0, left: 0, bottom: 0},
-          !this.props.hideShadow && !isAndroid && shadowStyle,
-          !this.props.hideShadow && !isAndroid && this.props.shadowStyle
-      ]}
-      >
-        <TouchableOpacity
-          testID={this.props.testID}
-          background={touchableBackground(
-            this.props.nativeFeedbackRippleColor,
-            this.props.fixNativeFeedbackRadius
-          )}
-          activeOpacity={this.props.activeOpacity}
-          onLongPress={this.props.onLongPress}
-          onPress={() => {
-            this.props.onPress();
-            if (this.props.children) this.animateButton();
-          }}
-          onPressIn={this.props.onPressIn}
-          onPressOut={this.props.onPressOut}
-        >
-            <LinearGradient
-                colors={['#ED2324', '#7C4A6D', '#0074BC']}
-                start={[-0.4, -0.25]}
-                end={[1.4, 0.25]}
-                location={[0.25, 0.45, 1]}
-                style={{
-                    flexDirection: 'column',
 
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 40,
-                    width: 80,
-                    height: 80,
+    render() {
+        const {
+            size,
+            position,
+            verticalOrientation,
+            hideShadow,
+            spacing
+        } = this.props;
+        if (!this.props.active) return null;
+        const animatedViewStyle = {
+            marginBottom: -10,
+            alignItems: alignItemsMap[position],
 
-
-                }}
-                >
+            // backgroundColor: this.props.buttonColor,
+            opacity: this.props.anim,
+            transform: [
                 {
-                    !this.state.active ? (
-                        <View>
-                            <Text style={[name]}>{'תדלוק/'}</Text>
-                            <Text style={[name]}>{'תשלום'}</Text>
-                        </View>
-                    ) : <Image source={closeWhite} resizeMode={'contain'} style={{width: 17, height: 17}} />
+                    translateY: this.props.anim.interpolate({
+                        inputRange: [0, 0],
+                        outputRange: [verticalOrientation === "down" ? -40 : 40, 0]
+                    })
                 }
+            ]
+        };
 
-            </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+        const buttonStyle = {
+            justifyContent: "center",
+            alignItems: "center",
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: this.props.buttonColor || this.props.btnColor
+        };
 
-  _renderButtonIcon() {
-    const { icon, renderIcon, btnOutRangeTxt, buttonTextStyle, buttonText } = this.props;
-    if (renderIcon) return renderIcon(this.state.active);
-    if (icon) {
-      console.warn('react-native-action-button: The `icon` prop is deprecated! Use `renderIcon` instead.');
-      return icon;
+        if (position !== "center")
+            buttonStyle[position] = (this.props.parentSize - size) / 2;
+
+        const Touchable = getTouchableComponent(this.props.useNativeFeedback);
+
+        const parentStyle = isAndroid &&
+        this.props.fixNativeFeedbackRadius
+            ? {
+                height: size,
+                marginBottom: spacing,
+
+                borderRadius: this.props.size / 2
+            }
+            : {
+                height: size + SHADOW_SPACE + spacing
+            };
+        return (
+            <Animated.View
+                pointerEvents="box-none"
+                style={[{alignSelf: 'flex-start', flex: 0, left: 9, right: 0},animatedViewStyle, parentStyle]}
+            >
+                <TouchableOpacity
+                    testID={this.props.testID}
+                    background={touchableBackground(
+                        this.props.nativeFeedbackRippleColor,
+                        this.props.fixNativeFeedbackRadius
+                    )}
+                    activeOpacity={this.props.activeOpacity || DEFAULT_ACTIVE_OPACITY}
+                    onPress={this.props.onPress}
+                >
+                    <LinearGradient
+                        colors={['#ED2324', '#7C4A6D', '#0074BC']}
+                        start={[-0.4, -0.25]}
+                        end={[1.4, 0.25]}
+                        location={[0.25, 0.45, 1]}
+                        style={[{
+                            flexDirection: 'column',
+
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: 40,
+                            width: 80,
+                            height: 80,
+
+
+                        }, buttonStyle,
+                            !hideShadow ? {...shadowStyle, ...this.props.shadowStyle} : null,
+                            {right: 0}]}
+                    >
+                        {this.props.children}
+                    </LinearGradient>
+                </TouchableOpacity>
+                {this._renderTitle()}
+            </Animated.View>
+        );
     }
 
-    const textColor = buttonTextStyle.color || "rgba(255,255,255,1)";
+    _renderTitle() {
+        if (!this.props.title) return null;
 
-    return (
-      <Animated.Text
-        style={[
-          styles.btnText,
-          buttonTextStyle,
-          {
-            color: this.anim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [textColor, btnOutRangeTxt || textColor]
-            })
-          }
-        ]}
-      >
-        {buttonText}
-      </Animated.Text>
-    );
-  }
+        const {
+            textContainerStyle,
+            hideLabelShadow,
+            offsetX,
+            parentSize,
+            size,
+            position,
+            spaceBetween
+        } = this.props;
+        const offsetTop = Math.max(size / 2 - TEXT_HEIGHT / 2, 0);
+        const positionStyles = { top: offsetTop };
+        const hideShadow = hideLabelShadow === undefined
+            ? this.props.hideShadow
+            : hideLabelShadow;
 
-  _renderActions() {
-    const { children, verticalOrientation } = this.props;
+        if (position !== "center") {
+            positionStyles[position] =
+                offsetX + (parentSize - size) / 2 + size + spaceBetween;
+        } else {
+            positionStyles.right = WIDTH / 2 + size / 2 + spaceBetween;
+        }
 
-    if (!this.state.active) return null;
+        const textStyles = [
+            styles.textContainer,
+            positionStyles,
+            !hideShadow && shadowStyle,
+            textContainerStyle
+        ];
 
-    const actionButtons = !Array.isArray(children) ? [children] : children;
+        const title = (
+            React.isValidElement(this.props.title) ?
+                this.props.title
+                : (
+                    <Text
+                        allowFontScaling={false}
+                        style={[styles.text, this.props.textStyle]}
+                    >
+                        {this.props.title}
+                    </Text>
+                )
+        )
 
-    const actionStyle = {
-      flex: 1,
-      alignSelf: "stretch",
-      // backgroundColor: 'purple',
-      justifyContent: verticalOrientation === "up" ? "flex-end" : "flex-start",
-      paddingTop: this.props.verticalOrientation === "down"
-        ? this.props.spacing
-        : 0,
-      zIndex: this.props.zIndex
-    };
-
-    return (
-      <View style={actionStyle} pointerEvents={"box-none"}>
-        {actionButtons.map((ActionButton, idx) => (
-          <ActionButtonItem
-            key={idx}
-            anim={this.anim}
-            {...this.props}
-            {...ActionButton.props}
-            parentSize={this.props.size}
-            btnColor={this.props.btnOutRange}
-            onPress={() => {
-              if (this.props.autoInactive) {
-                this.timeout = setTimeout(this.reset.bind(this), 200);
-              }
-              ActionButton.props.onPress();
-            }}
-          />
-        ))}
-      </View>
-    );
-  }
-
-  _renderTappableBackground() {
-    return (
-      <TouchableOpacity
-        activeOpacity={1}
-        style={this.getOverlayStyles()}
-        onPress={this.reset.bind(this)}
-      />
-    );
-  }
-
-  //////////////////////
-  // Animation Methods
-  //////////////////////
-
-  animateButton(animate = true) {
-    if (this.state.active) return this.reset();
-
-    if (animate) {
-      Animated.spring(this.anim, { toValue: 1 }).start();
-    } else {
-      this.anim.setValue(1);
+        return (
+            <TextTouchable
+                background={touchableBackground(
+                    this.props.nativeFeedbackRippleColor,
+                    this.props.fixNativeFeedbackRadius
+                )}
+                activeOpacity={this.props.activeOpacity || DEFAULT_ACTIVE_OPACITY}
+                onPress={this.props.onPress}
+            >
+                <View style={textStyles}>
+                    {title}
+                </View>
+            </TextTouchable>
+        );
     }
-
-    this.setState({ active: true, resetToken: this.state.resetToken });
-  }
-
-  reset(animate = true) {
-    if (this.props.onReset) this.props.onReset();
-
-    if (animate) {
-      Animated.spring(this.anim, { toValue: 0 }).start();
-    } else {
-      this.anim.setValue(0);
-    }
-    this.setState({ active: false, resetToken: this.state.resetToken })
-  }
 }
 
-ActionButton.Item = ActionButtonItem;
-
-ActionButton.propTypes = {
-  resetToken: PropTypes.any,
-  active: PropTypes.bool,
-
-  position: PropTypes.string,
-  elevation: PropTypes.number,
-  zIndex: PropTypes.number,
-
-  hideShadow: PropTypes.bool,
-  shadowStyle: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array,
-    PropTypes.number
-  ]),
-
-  renderIcon: PropTypes.func,
-
-  bgColor: PropTypes.string,
-  bgOpacity: PropTypes.number,
-  buttonColor: PropTypes.string,
-  buttonTextStyle: Text.propTypes.style,
-  buttonText: PropTypes.string,
-
-  offsetX: PropTypes.number,
-  offsetY: PropTypes.number,
-  spacing: PropTypes.number,
-  size: PropTypes.number,
-  autoInactive: PropTypes.bool,
-  onPress: PropTypes.func,
-  onPressIn: PropTypes.func,
-  onPressOut: PropTypes.func,
-  backdrop: PropTypes.oneOfType([PropTypes.bool, PropTypes.object]),
-  degrees: PropTypes.number,
-  verticalOrientation: PropTypes.oneOf(["up", "down"]),
-  backgroundTappable: PropTypes.bool,
-  activeOpacity: PropTypes.number,
-
-  useNativeFeedback: PropTypes.bool,
-  fixNativeFeedbackRadius: PropTypes.bool,
-  nativeFeedbackRippleColor: PropTypes.string,
-
-  testID: PropTypes.string
-};
-
-ActionButton.defaultProps = {
-  resetToken: null,
-  active: false,
-  bgColor: "transparent",
-  bgOpacity: 1,
-  buttonColor: "rgba(0,0,0,1)",
-  buttonTextStyle: {},
-  buttonText: "+",
-  spacing: 20,
-  outRangeScale: 1,
-  autoInactive: true,
-  onPress: () => {},
-  onPressIn: () => {},
-  onPressOn: () => {},
-  backdrop: false,
-  degrees: 45,
-  position: "right",
-  offsetY: 30,
-  size: 56,
-  verticalOrientation: "up",
-  backgroundTappable: false,
-  useNativeFeedback: true,
-  activeOpacity: DEFAULT_ACTIVE_OPACITY,
-  fixNativeFeedbackRadius: false,
-  nativeFeedbackRippleColor: "rgba(255,255,255,0.75)",
-  testID: undefined
-};
-
 const styles = StyleSheet.create({
-  overlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    top: 0,
-    backgroundColor: "transparent"
-  },
-  btnText: {
-    marginTop: -4,
-    fontSize: 24,
-    backgroundColor: "transparent"
-  }
+    textContainer: {
+        position: "absolute",
+        paddingVertical: isAndroid ? 2 : 3,
+        paddingHorizontal: 8,
+        borderRadius: 3,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: "#eee",
+        backgroundColor: "white",
+        height: TEXT_HEIGHT
+    },
+    text: {
+        flex: 1,
+        fontSize: 12,
+        color: "#444"
+    }
 });
