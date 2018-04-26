@@ -352,11 +352,7 @@ export default class ActionButton extends Component {
     } else {
       this.anim.setValue(0);
     }
-
-    setTimeout(
-      () => this.setState({ active: false, resetToken: this.state.resetToken }),
-      250
-    );
+    this.setState({ active: false, resetToken: this.state.resetToken })
   }
 }
 
