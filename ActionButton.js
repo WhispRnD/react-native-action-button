@@ -22,6 +22,8 @@ import {
 } from "./shared";
 
 const closeWhite = require('../../assets/images/closeWhite.png')
+const fuelCircle = require('./payFuelCircle.png')
+const xCircle = require('./xCircle.png')
 
 export default class ActionButton extends Component {
     constructor(props) {
@@ -89,7 +91,8 @@ export default class ActionButton extends Component {
                 zIndex: this.props.zIndex,
                 justifyContent: this.props.verticalOrientation === "up"
                     ? "flex-end"
-                    : "flex-start"
+                    : "flex-start",
+
             }
         ];
     }
@@ -109,7 +112,7 @@ export default class ActionButton extends Component {
                     style={[
                         this.getOverlayStyles(),
                         {
-                            backgroundColor: this.props.bgColor,
+                            backgroundColor: 'transparent',
                             opacity: this.anim.interpolate({
                                 inputRange: [0, 1],
                                 outputRange: [0, this.props.bgOpacity]
@@ -124,7 +127,8 @@ export default class ActionButton extends Component {
                     style={[
                         this.getOverlayStyles(),
                         this.getOrientation(),
-                        this.getOffsetXY()
+                        this.getOffsetXY(),
+                        {paddingLeft: 15}
                     ]}
                 >
                     {this.state.active &&
@@ -218,33 +222,12 @@ export default class ActionButton extends Component {
                     onPressIn={this.props.onPressIn}
                     onPressOut={this.props.onPressOut}
                 >
-                    <LinearGradient
-                        colors={['#ED2324', '#7C4A6D', '#0074BC']}
-                        start={[-0.4, -0.25]}
-                        end={[1.4, 0.25]}
-                        location={[0.25, 0.45, 1]}
-                        style={{
-                            flexDirection: 'column',
+                    {
+                        !this.state.active ? (
+                            <Image source={fuelCircle} resizeMode={'contain'} style={styles.fuelPayImage}/>
 
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: 40,
-                            width: 80,
-                            height: 80,
-
-
-                        }}
-                    >
-                        {
-                            !this.state.active ? (
-                                <View>
-                                    <Text style={[name]}>{'תדלוק/'}</Text>
-                                    <Text style={[name]}>{'תשלום'}</Text>
-                                </View>
-                            ) : <Image source={closeWhite} resizeMode={'contain'} style={{width: 17, height: 17}} />
-                        }
-
-                    </LinearGradient>
+                        ) : <Image source={xCircle} resizeMode={'contain'} style={styles.fuelPayImage}/>
+                    }
                 </TouchableOpacity>
             </View>
         );
@@ -447,5 +430,13 @@ const styles = StyleSheet.create({
         marginTop: -4,
         fontSize: 24,
         backgroundColor: "transparent"
+    },
+    fuelPayImage: {
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 40,
+        width: 80,
+        height: 80,
     }
 });

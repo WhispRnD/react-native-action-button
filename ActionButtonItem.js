@@ -114,27 +114,7 @@ export default class ActionButtonItem extends Component {
                     activeOpacity={this.props.activeOpacity || DEFAULT_ACTIVE_OPACITY}
                     onPress={this.props.onPress}
                 >
-                    <LinearGradient
-                        colors={['#ED2324', '#7C4A6D', '#0074BC']}
-                        start={[-0.4, -0.25]}
-                        end={[1.4, 0.25]}
-                        location={[0.25, 0.45, 1]}
-                        style={[{
-                            flexDirection: 'column',
-
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: 40,
-                            width: 80,
-                            height: 80,
-
-
-                        }, buttonStyle,
-                            !hideShadow ? {...shadowStyle, ...this.props.shadowStyle} : null,
-                            {right: 0}]}
-                    >
-                        {this.props.children}
-                    </LinearGradient>
+                    {this.props.children}
                 </TouchableOpacity>
                 {this._renderTitle()}
             </Animated.View>
