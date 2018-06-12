@@ -435,8 +435,8 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 40,
-        width: 80,
-        height: 80,
+        borderRadius: 36,
+        width: 72,
+        height: 72,
     }
 });
